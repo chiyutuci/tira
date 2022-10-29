@@ -1,4 +1,4 @@
-set(TIRA_SOURCE main.cpp tira.cpp tools.cpp)
+set(TIRA_SOURCE main.cpp tira.cpp tools.cpp integral.cpp)
 
 add_executable(tira ${TIRA_SOURCE})
 
