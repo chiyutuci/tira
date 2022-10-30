@@ -21,6 +21,8 @@ public:
 private:
   // configure the integral family
   void config_family_();
+  // prepare some basic computations
+  void prepare_family_();
 
   void create_relations_();
   // integrate-by-parts relations
@@ -30,6 +32,8 @@ private:
   void create_li_();
   // symmetries
   void create_sym_();
+  // substitute irriducible scalar products in a relation
+  void subs_irrsp_(EquationPtr &relation);
 
 private:
   // family name
@@ -43,11 +47,11 @@ private:
   vsy ext_vars_, int_vars_;
   // kinematics invariant  e.g. s, m
   sy inv_var_;
-  // scalar product rules  e.g. (p1+p2)^2 = s
+  // scalar product rules  e.g. p1*p2 = s
   lst sp_rules_;
 
   // number of propagators
-  int nprops_;
+  size_t nprops_;
   // propagators with sperated momenta and mass: {momenta, mass}
   vector<pair<string, string>> props_raw_;
   // propagators: momenta^2 - mass
@@ -60,8 +64,13 @@ private:
   // smax: the sum of numerator indices
   int rmax_, smax_;
 
+  // symbols represent propagators dd_i
+  matrix propsy_;
+  // rules to transform scalar products to propagators
+  lst sps_to_props_;
+
   // IBP relations of this family
-  vector<EquationPtr> ibps;
+  vector<EquationPtr> ibps_;
 };
 
 #endif // TIRA_H_

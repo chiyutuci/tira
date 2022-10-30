@@ -18,9 +18,12 @@ public:
 
   ~Integral() {}
 
+  // compare two integrals' indices
+  bool same_indices(const Integral &other);
+
 public:
   // propagator indices
-  vector<unsigned> indices;
+  vector<int> indices;
 };
 
 // RIntegral is an integral with coefficient used in relations
@@ -42,6 +45,9 @@ public:
   explicit Equation(unsigned n) : integrals(n) {}
 
   ~Equation() {}
+
+  // collect the duplicate integrals
+  void collect_integrals();
 
   // write an equation to a file
   void write_file(ofstream &out, const string &name) const;
