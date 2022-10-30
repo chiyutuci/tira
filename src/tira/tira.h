@@ -30,6 +30,10 @@ private:
   void create_ibp_detail_(const vsy &vars);
   // Lorentz invariance relations
   void create_li_();
+  void create_li_detail_();
+
+  // find trivial sectors
+  void trivial_sectors_();
   // symmetries
   void create_sym_();
   // substitute irriducible scalar products in a relation
@@ -71,6 +75,8 @@ private:
 
   // IBP relations of this family
   vector<EquationPtr> ibps_;
+  // LI relations of this family
+  vector<EquationPtr> lis_;
 };
 
 #endif // TIRA_H_

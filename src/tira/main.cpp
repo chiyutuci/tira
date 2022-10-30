@@ -8,7 +8,7 @@ int main(int argc, char **argv) {
   Tira tira;
   tira.execute_jobs();
 
-  cout << "\n========== Reduction Finished ==============\n" << endl;
+  cout << "\n========== Reduction Finished ==============" << endl;
   timer.end_all();
   return 0;
 }

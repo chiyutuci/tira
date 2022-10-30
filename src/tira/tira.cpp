@@ -63,7 +63,6 @@ void Tira::config_family_() {
               reader(prop_raw.second);
     props_.push_back(prop.expand().subs(sp_rules_, subs_options::algebraic));
   }
-  cout << props_ << endl;
 
   // top level sector, depends on target integrals
   top_sector_ = 15; // [1,1,1,1]
@@ -139,11 +138,13 @@ void Tira::prepare_family_() {
 void Tira::create_relations_() {
   create_ibp_();
   create_li_();
+
+  trivial_sectors_();
   create_sym_();
 }
 
 void Tira::create_ibp_() {
-  cout << "\n========== Generate IBP relations ==========\n" << endl;
+  cout << "\n========== Generate IBP relations ==========" << endl;
   Timer timer;
 
   create_ibp_detail_(int_vars_); // k_i k_j
@@ -160,20 +161,30 @@ void Tira::create_ibp_() {
   for (size_t i = 0; i < ibps_.size(); ++i)
     ibps_[i].get()->write_file(ibpfile, name_);
 
-  cout << "\nThere are " << ibps_.size() << " IBP relations\n" << endl;
+  cout << "\nThere are " << ibps_.size() << " IBP relations" << endl;
   timer.end();
 }
 
 void Tira::create_li_() {
-  cout << "\n========== Generate LI relations ===========\n" << endl;
+  cout << "\n========== Generate LI relations ===========" << endl;
   Timer timer;
 
-  string li_file = "./relations/LI";
+  create_li_detail_();
 
+  // sort these relations by their length
+  sort(lis_.begin(), lis_.end(),
+       [](const EquationPtr &l, const EquationPtr &r) {
+         return l->integrals.size() < r->integrals.size();
+       });
+
+  // save li relations to a file
+  ofstream lifile("./relations/li");
+  for (size_t i = 0; i < lis_.size(); ++i)
+    lis_[i].get()->write_file(lifile, name_);
+
+  cout << "\nThere are " << lis_.size() << " LI relations" << endl;
   timer.end();
 }
-
-void Tira::create_sym_() {}
 
 // IBP relations:
 // Integrate[ Diff[k_i^u] * (p_j^u * integrand) ] == 0
@@ -224,6 +235,71 @@ void Tira::create_ibp_detail_(const vsy &vars) {
       // add this relation
       if (ibp->integrals.size() > 0)
         ibps_.push_back(move(ibp));
+    }
+  }
+
+  delete[] indices;
+}
+
+// LI relations:
+// Sum[i](p_i^v*Diff[p_i_u]-p_i^u*Diff[p_i_v] Integral == 0
+// contracting with p_r_u*p_s_v-p_s_u*p_r_v
+// number of relations: next*(next-1)/2
+void Tira::create_li_detail_() {
+
+  // generate symbolic propagator indices {a1,...,an}, n=nprops
+  sy *indices = new sy[nprops_];
+  generate_symbols(indices, "a", nprops_);
+
+  ex coeff1, coeff2;
+
+  // r represents p_r
+  // s represents p_s
+  // i represents p_i
+  // v represents props[v] (derivative of denominators)
+  for (size_t r = 0; r < ext_vars_.size(); ++r) {
+    for (size_t s = r + 1; s < ext_vars_.size(); ++s) {
+      // init a li relation
+      EquationPtr li(new Equation());
+
+      for (size_t i = 0; i < ext_vars_.size(); ++i) {
+        for (size_t v = 0; v < nprops_; ++v) {
+          // p_r_u*p_s_v
+          coeff1 = 2 * (expand(diff(props_[v], ext_vars_[i]) * (-indices[v])) *
+                        ext_vars_[r]);
+          coeff1 = coeff1.expand().subs(sp_rules_, subs_options::algebraic);
+
+          coeff2 = ext_vars_[i] * ext_vars_[s];
+          coeff2 = coeff2.expand().subs(sp_rules_, subs_options::algebraic);
+          if (coeff1 != 0 && coeff2 != 0) {
+            RIntegralPtr integral(new RIntegral(nprops_));
+
+            integral->coeff = coeff1 * coeff2;
+            integral->indices[v] = 1;
+            li->integrals.push_back(move(integral));
+          }
+          // -p_s_u*p_r_v
+          coeff1 = -2 * (expand(diff(props_[v], ext_vars_[i]) * (-indices[v])) *
+                         ext_vars_[s]);
+          coeff1 = coeff1.expand().subs(sp_rules_, subs_options::algebraic);
+
+          coeff2 = ext_vars_[i] * ext_vars_[r];
+          coeff2 = coeff2.expand().subs(sp_rules_, subs_options::algebraic);
+          if (coeff1 != 0 && coeff2 != 0) {
+            RIntegralPtr integral(new RIntegral(nprops_));
+
+            integral->coeff = coeff1 * coeff2;
+            integral->indices[v] = 1;
+            li->integrals.push_back(move(integral));
+          }
+        }
+      }
+
+      subs_irrsp_(li);
+
+      // add this relation
+      if (li->integrals.size() > 0)
+        lis_.push_back(move(li));
     }
   }
 
@@ -285,3 +361,12 @@ void Tira::subs_irrsp_(EquationPtr &relation) {
   relation.reset();
   relation = move(relation_new);
 }
+
+void Tira::trivial_sectors_() {
+  cout << "\n========== Search trivial sectors ==========" << endl;
+  Timer timer;
+
+  timer.end();
+}
+
+void Tira::create_sym_() {}

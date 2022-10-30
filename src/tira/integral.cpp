@@ -12,6 +12,7 @@ bool Integral::same_indices(const Integral &other) {
 }
 
 void Equation::collect_integrals() {
+  // collect same indices
   size_t right = integrals.size();
   for (size_t i = 0; i < right; ++i)
     for (size_t j = i + 1; j < right; ++j)
@@ -23,6 +24,14 @@ void Equation::collect_integrals() {
         --right;
         --j;
       }
+  // delete zero coefficients
+  for (size_t i = 0; i < right; ++i) {
+    if (integrals[i]->coeff == 0) {
+      swap(integrals[i], integrals[right - 1]);
+      --right;
+      --i;
+    }
+  }
   integrals.resize(right);
 }
 
