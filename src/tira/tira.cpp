@@ -62,9 +62,9 @@ void Tira::config_family_() {
     props_.push_back(prop.expand());
   }
 
-  // top level sector, depend on target integrals
+  // top level sector, depends on target integrals
   top_sector_ = 15; // [1,1,1,1]
-  // integrand indices, depend on target integrals
+  // integrand indices, depends on target integrals
   rmax_ = 6;
   smax_ = 2;
 }
@@ -108,8 +108,14 @@ void Tira::create_li_() {
 
 void Tira::create_sym_() {}
 
+// IBP relations:
 // Integrate[ Diff[k_i^u] * (p_j^u * integrand) ] == 0
 // Integrate[ Diff[k_i^u] * (k_j^u * integrand) ] == 0
+// steps:
+// 1. general cases: terms from derivatives of the denomimator
+// 2. k_j = k_i: an extra term, integrand not changed, coefficient d
+// 3. substitute irriducible scalar products
+// 4. put together
 void Tira::create_ibp_detail_(const vsy &vars) {
 
   // generate symbolic propagator indices {a1,...,an}, n=nprops
